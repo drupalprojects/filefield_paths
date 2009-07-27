@@ -50,24 +50,22 @@ function comment_upload_filefield_paths_form_submit(&$form_values, &$ffp) {
  * Implementation of hook_filefield_paths_get_fields().
  */
 function comment_upload_filefield_paths_get_fields(&$node, &$ffp) {
-  if (is_object($node) && $node->form_id == 'comment_form') {
-    if (isset($node->files)) {
-      foreach ($node->files as &$file) {
-        $new = FALSE;
-        if (preg_match('/upload_([\d])/', $file['fid'], $match)) {
-          $new = TRUE;
-          $file = (array) $node->processed_files[$match[1]];
-        }
-
-        $ffp['#files'][] = array(
-          'field' => &$file,
-          'module' => 'comment_upload',
-          'name' => 'comment_upload',
-          'new' => $new,
-        );
-
-        $ffp['#types']['comment_upload'] = TRUE;
+  if (is_object($node) && isset($node->cid) && isset($node->files)) {
+    foreach ($node->files as &$file) {
+      $new = FALSE;
+      if (preg_match('/upload_([\d])/', $file['fid'], $match)) {
+        $new = TRUE;
+        $file = (array) $node->processed_files[$match[1]];
       }
+
+      $ffp['#files'][] = array(
+        'field' => &$file,
+        'module' => 'comment_upload',
+        'name' => 'comment_upload',
+        'new' => $new,
+      );
+
+      $ffp['#types']['comment_upload'] = TRUE;
     }
   }
 }
@@ -119,6 +117,7 @@ function filefield_paths_comment($a1, $op) {
       $object->type = $node->type;
       $object->files = $a1['files'];
       $object->processed_files = _comment_upload_load_files($a1['cid']);
+      $object->cid = $a1['cid'];
 
       if (($ffp = filefield_paths_get_fields($object)) == FALSE) {
         break;

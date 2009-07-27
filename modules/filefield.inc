@@ -58,7 +58,7 @@ function filefield_filefield_paths_form_submit(&$form_values, &$ffp) {
  * Implementation of hook_filefield_paths_get_fields().
  */
 function filefield_filefield_paths_get_fields(&$node, &$ffp) {
-  if (is_object($node) && $node->form_id == $node->type .'_node_form') {
+  if (is_object($node)) {
     $content_type = content_types($node->type);
 
     foreach ($content_type['fields'] as $field) {
