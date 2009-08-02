@@ -3,6 +3,7 @@
 FileField Paths 5.x-1.x-dev, xxxx-xx-xx (development release)
 -----------------------------------
 
+- #536384: Fixed transliteration support.
 - #529632 by orico: Fixed issue with Cleanup settings not being saved.
 - #529576 by orico: Fixed issue with Image Path issue not being displayed.
 - #525354: Fixed implementations of hook_filefield_paths_get_fields().

@@ -39,7 +39,7 @@ function comment_upload_filefield_paths_form_alter(&$form, &$ffp) {
  * Implementation of hook_filefield_paths_form_submit().
  */
 function comment_upload_filefield_paths_form_submit(&$form_values, &$ffp) {
-  if ($form_values['form_id'] == 'node_type_form') {
+  if (isset($form_values['form_id']) && $form_values['form_id'] == 'node_type_form') {
     $ffp['comment_upload'] = array(
       'type' => $form_values['type'],
     );
@@ -133,7 +133,6 @@ function filefield_paths_comment($a1, $op) {
           );
         }
       }
-
       break;
   }
 }

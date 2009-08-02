@@ -45,7 +45,7 @@ function filefield_filefield_paths_form_alter(&$form, &$ffp) {
  * Implementation of hook_filefield_paths_form_submit().
  */
 function filefield_filefield_paths_form_submit(&$form_values, &$ffp) {
-  if ($form_values['form_id'] != 'node_type_form') {
+  if (isset($form_values['form_id']) && $form_values['form_id'] != 'node_type_form') {
     $ffp[$form_values['field_name']] = array(
       'type' => $form_values['type_name'],
     );
