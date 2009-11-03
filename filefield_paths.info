@@ -7,5 +7,4 @@ files[] = filefield_paths.install
 files[] = filefield_paths.module
 files[] = modules/file.inc
 files[] = modules/image.inc
-files[] = modules/upload.inc
 files[] = tests/filefield_paths.test

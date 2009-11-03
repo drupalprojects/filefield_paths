@@ -533,6 +533,7 @@ function filefield_paths_filefield_paths_process_file($new, &$file, $settings, &
 
         // Store new filename in file Array
         $file['field']['filename'] = $file['filename']['new'];
+        $file['field']['uri'] = $file['filepath']['new'];
       }
     }
 
@@ -619,8 +620,6 @@ function filefield_paths_tokens($type, $tokens, array $data = array(), array $op
  */
 function filefield_paths_process_string($value, $data, $settings = array()) {
   // Process string tokens.
-  //$placeholders = _filefield_paths_get_values($type, $object, (module_exists('pathauto') && isset($settings['pathauto']) && $settings['pathauto']));
-  //$value = str_replace($placeholders['tokens'], $placeholders['values'], $value);
   $value = token_replace($value, $data);
 
   // Transliterate string.
@@ -648,54 +647,13 @@ function filefield_paths_process_string($value, $data, $settings = array()) {
   return $value;
 }
 
-//function _filefield_paths_get_values($type, $object, $pathauto = FALSE) {
-//  switch ($type) {
-//    case 'node':
-//      $full = token_get_values($type, $object, TRUE);
-//      break;
-//
-//    case 'field':
-//      $all = filefield_paths_token_values($type, $object);
-//      if (function_exists('filefield_token_values')) {
-//        $all = array_merge(filefield_token_values($type, $object), $all);
-//      }
-//
-//      $full = new stdClass();
-//      $full->tokens = array_keys($all);
-//      $full->values = array_values($all);
-//      break;
-//  }
-//
-//  $full->tokens = token_prepare_tokens($full->tokens);
-//  if ($pathauto) {
-//    $temp = clone $full;
-//
-//    // Strip square brackets from tokens for Pathauto.
-//    foreach ($temp->tokens as &$token) {
-//      $token = trim($token, "[]");
-//    }
-//
-//    if (!function_exists('pathauto_clean_token_values')) {
-//      _pathauto_include();
-//    }
-//    $full->values = pathauto_clean_token_values($temp);
-//  }
-//
-//  // Temporary fix: Remove double slashes from token values.
-//  // @TODO: Remove when #420856 is committed to Pathauto.
-//  foreach ($full->values as &$value) {
-//    $value = str_replace('//', '/', $value);
-//  }
-//
-//  return array('tokens' => $full->tokens, 'values' => $full->values);
-//}
-
 /**
  * Implements hook_file_insert().
  */
 function filefield_paths_file_insert(&$file) {
   // Store original filename in the database.
   if (empty($file->origname)) {
+    $file->origname = $file->filename;
     db_update('file')
       ->fields(array('origname' => $file->filename))
       ->condition('fid', $file->fid)
