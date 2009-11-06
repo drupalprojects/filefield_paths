@@ -60,21 +60,17 @@ function image_filefield_paths_get_fields(&$node, &$ffp) {
     }
 
     foreach ($fields as $name => $field) {
-      if ($field['type'] == 'image' && isset($node->$field['field_name']) && is_array($node->$field['field_name'])) {
+      if ($field['type'] == 'image' && isset($node->{$field['field_name']}) && is_array($node->{$field['field_name']})) {
 
         foreach ($node->{$field['field_name']}['zxx'] as $file) {
-          $file = file_load($file['fid']);
+          $file = !isset($file['uri']) ? file_load($file['fid']) : (object) $file;
 
           $ffp['#files'][] = array(
             'field' => (array) $file,
             'module' => $field['module'],
             'name' => $field['field_name'],
-            //'new' => (!empty($file['filepath']) && !empty($file['data']['process']))
-            //  ? TRUE
-            //  : FALSE
-            'new' => !$file->status,
+            'new' => ($file->status == 0 || isset($file->new)) ? TRUE : FALSE,
           );
-          //unset($file['data']['process']);
 
           $ffp['#types'][$field['field_name']] = TRUE;
         }
@@ -85,34 +81,35 @@ function image_filefield_paths_get_fields(&$node, &$ffp) {
 }
 
 /**
- * Implements hook_filefield_paths_process_file().
+ * Implements hook_filefield_paths_batch_update().
  */
-//function image_filefield_paths_process_file($new, $file, $settings, $node, $update) {
-//  if ($new) {
-//    // Delete ImageField thumbnail.
-//    if (isset($file['widget']) && $file['widget'] == 'imagefield' && file_exists($thumbnail_source = imagefield_file_admin_thumb_path(array('filepath' => $file['filepath']['old'])))) {
-//      file_delete($thumbnail_source);
-//    }
-//  }
-//}
+function file_filefield_paths_batch_update($field, $type, &$objects) {
+  $instance = field_info_instance('node', $field, $type);
+  $results = field_attach_query($instance['field_id'], array(array('bundle', array($type))));
+
+  // Build array of Node IDs.
+  foreach ($results['node'] as $node) {
+    $objects[] = $node->nid;
+  }
+}
 
 /**
- * Implements hook_filefield_paths_cleanup().
+ * Implements hook_filefield_paths_update().
  */
-//function image_filefield_paths_cleanup(&$ffp, $paths, $name) {
-//  // Check for ImageFields.
-//  $imagefield = FALSE;
-//  foreach ($ffp['#files'] as $file) {
-//    if ($file['name'] == $name) {
-//      if (isset($file['widget']) && $file['widget'] == 'imagefield') {
-//        $imagefield = TRUE;
-//      }
-//      break;
-//    }
-//  }
-//  // Cleanup ImageFields temporary thumbnail paths.
-//  if ($imagefield) {
-//    array_unshift($paths, 'imagefield_thumbs');
-//    filefield_paths_cleanup_temp($paths);
-//  }
-//}
+function file_filefield_paths_update($oid, $field) {
+  $node = node_load($oid);
+
+  // Flag files for update.
+  if (isset($node->{$field})) {
+    foreach ($node->{$field}['zxx'] as &$file) {
+      if (!is_array($file) || empty($file['uri'])) {
+        continue;
+      }
+
+      $file['new'] = TRUE;
+    }
+  }
+
+  // Process Node.
+  filefield_paths_node_update($node);
+}

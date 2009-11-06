@@ -297,7 +297,8 @@ function filefield_paths_form_submit($form, &$form_state) {
 
       if ($form_state['values']['ffp_' . $field_name]['retroactive_update']) {
         $retroactive_update = TRUE;
-        filefield_paths_batch_update(arg(5), $field_name, arg(3));
+        $module = isset($form['#field']) ? $form['#field']['module'] : $field_name;
+        filefield_paths_batch_update($module, $field_name, arg(4));
       }
 
       variable_set("ffp_{$field_data['type']}_{$field_name}", $form_state['values']['ffp_' . $field_name]['active_updating']);
@@ -310,75 +311,52 @@ function filefield_paths_form_submit($form, &$form_state) {
   }
 }
 
-//function filefield_paths_batch_update($field_name = NULL, $field_module, $type_name) {
-//  $objects = array();
-//  $module = (!empty($field_name)) ? 'filefield' : $field_module;
-//
-//  // Invoke hook_filefield_paths_update().
-//  if (function_exists($function = $module . '_filefield_paths_batch_update')) {
-//    $function($field_name, str_replace('-', '_', $type_name), $objects);
-//  }
-//
-//  // Create batch.
-//  $batch = array(
-//    'title' => t('Updating FileField Paths'),
-//    'operations' => array(
-//      array('_filefield_paths_batch_update_process', array($objects, $field_name))
-//    ),
-//  );
-//  batch_set($batch);
-//}
+function filefield_paths_batch_update($module, $field, $type) {
+  $objects = array();
 
-//function _filefield_paths_batch_update_process($objects, $field_name, &$context) {
-//  if (!isset($context['sandbox']['progress'])) {
-//    $context['sandbox']['progress'] = 0;
-//    $context['sandbox']['max'] = count($objects);
-//    $context['sandbox']['objects'] = $objects;
-//  }
-//
-//  // Process nodes by groups of 5.
-//  $count = min(5, count($context['sandbox']['objects']));
-//  for ($i = 1; $i <= $count; $i++) {
-//    // For each oid, load the object, update the files and save it.
-//    $oid = array_shift($context['sandbox']['objects']);
-//
-//    foreach (module_implements('filefield_paths_update') as $module) {
-//      $function = $module . '_filefield_paths_update';
-//      $function($oid, $field_name);
-//    }
-//
-//    // Update our progress information.
-//    $context['sandbox']['progress']++;
-//  }
-//
-//  // Inform the batch engine that we are not finished,
-//  // and provide an estimation of the completion level we reached.
-//  if ($context['sandbox']['progress'] != $context['sandbox']['max']) {
-//    $context['finished'] = $context['sandbox']['progress'] / $context['sandbox']['max'];
-//  }
-//}
+  // Invoke hook_filefield_paths_batch_update().
+  if (function_exists($function = $module . '_filefield_paths_batch_update')) {
+    $function($field, str_replace('-', '_', $type), $objects);
+  }
 
-///**
-// * Implements hook_nodeapi().
-// */
-//function filefield_paths_node_presave($node) {
-//  if (module_exists('content')) {
-//    $content_type = content_types($node->type);
-//    foreach ($content_type['fields'] as $field) {
-//      if ($field['type'] == 'filefield' && is_array($node->$field['field_name'])) {
-//        foreach ($node->$field['field_name'] as $count => &$file) {
-//          if (empty($file['filepath'])) {
-//            continue;
-//          }
-//          // If file is newly uploaded, flag to be processed
-//          if ($file['status'] == 0) {
-//            $file['data']['process'] = TRUE;
-//          }
-//        }
-//      }
-//    }
-//  }
-//}
+  // Create batch.
+  $batch = array(
+    'title' => t('Updating FileField Paths'),
+    'operations' => array(
+      array('_filefield_paths_batch_update_process', array($objects, $module, $field))
+    ),
+  );
+  batch_set($batch);
+}
+
+function _filefield_paths_batch_update_process($objects, $module, $field, &$context) {
+  if (!isset($context['sandbox']['progress'])) {
+    $context['sandbox']['progress'] = 0;
+    $context['sandbox']['max'] = count($objects);
+    $context['sandbox']['objects'] = $objects;
+  }
+
+  // Process nodes by groups of 5.
+  $count = min(5, count($context['sandbox']['objects']));
+  for ($i = 1; $i <= $count; $i++) {
+    // For each oid, load the object, update the files and save it.
+    $oid = array_shift($context['sandbox']['objects']);
+
+    // Invoke hook_filefield_paths_update().
+    if (function_exists($function = $module . '_filefield_paths_update')) {
+      $function($oid, $field);
+    }
+
+    // Update our progress information.
+    $context['sandbox']['progress']++;
+  }
+
+  // Inform the batch engine that we are not finished,
+  // and provide an estimation of the completion level we reached.
+  if ($context['sandbox']['progress'] != $context['sandbox']['max']) {
+    $context['finished'] = $context['sandbox']['progress'] / $context['sandbox']['max'];
+  }
+}
 
 /**
  * Implements hook_node_insert().
@@ -404,10 +382,7 @@ function filefield_paths_node_update($node) {
       }
     }
 
-  // Re-write node entry if required.
-  if ($update->node == TRUE) {
-      field_attach_update('node', $node);
-  }
+    field_attach_update('node', $node);
 
 //  // Cleanup temporary paths.
 //  if ($ffp['#settings']) {

@@ -63,18 +63,14 @@ function file_filefield_paths_get_fields(&$node, &$ffp) {
       if ($field['type'] == 'file' && isset($node->{$field['field_name']}) && is_array($node->{$field['field_name']})) {
 
         foreach ($node->{$field['field_name']}['zxx'] as $file) {
-          $file = file_load($file['fid']);
+          $file = !isset($file['uri']) ? file_load($file['fid']) : (object) $file;
 
           $ffp['#files'][] = array(
             'field' => (array) $file,
             'module' => $field['module'],
             'name' => $field['field_name'],
-            //'new' => (!empty($file['filepath']) && !empty($file['data']['process']))
-            //  ? TRUE
-            //  : FALSE
-            'new' => !$file->status,
+            'new' => ($file->status == 0 || isset($file->new)) ? TRUE : FALSE,
           );
-          //unset($file['data']['process']);
 
           $ffp['#types'][$field['field_name']] = TRUE;
         }
@@ -87,46 +83,33 @@ function file_filefield_paths_get_fields(&$node, &$ffp) {
 /**
  * Implements hook_filefield_paths_batch_update().
  */
-//function file_filefield_paths_batch_update($field_name, $type_name, &$objects) {
-//  if (!empty($field_name)) {
-//    $field = content_fields($field_name, $type_name);
-//    $db_info = content_database_info($field);
-//
-//    $result = db_query(
-//      "SELECT c.nid FROM {%s} c LEFT JOIN {node} n ON c.nid = n.nid WHERE c.%s IS NOT NULL
-//      AND n.type = '%s'", $db_info['table'], $db_info['columns']['fid']['column'], $type_name
-//    );
-//
-//    // Build array of Node IDs.
-//    while ($node = db_fetch_object($result)) {
-//      $objects[] = $node->nid;
-//    }
-//  }
-//}
+function image_filefield_paths_batch_update($field, $type, &$objects) {
+  $instance = field_info_instance('node', $field, $type);
+  $results = field_attach_query($instance['field_id'], array(array('bundle', array($type))));
+
+  // Build array of Node IDs.
+  foreach ($results['node'] as $node) {
+    $objects[] = $node->nid;
+  }
+}
 
 /**
  * Implements hook_filefield_paths_update().
  */
-//function file_filefield_paths_update($oid, $field_name) {
-//  if (!empty($field_name)) {
-//    $node = node_load($oid);
-//    $content_type = content_types($node->type);
-//
-//    // Flag files for update.
-//    if (isset($node->$field_name)) {
-//      foreach ($node->$field_name as &$file) {
-//        if (empty($file['filepath'])) {
-//          continue;
-//        }
-//
-//        $file['data']['process'] = TRUE;
-//      }
-//    }
-//
-//    // Set Form ID.
-//    $node->form_id = $node->type . '_node_form';
-//
-//    // Process Node.
-//    filefield_paths_nodeapi($node, 'update', NULL, NULL);
-//  }
-//}
+function image_filefield_paths_update($oid, $field) {
+  $node = node_load($oid);
+
+  // Flag files for update.
+  if (isset($node->{$field})) {
+    foreach ($node->{$field}['zxx'] as &$file) {
+      if (!is_array($file) || empty($file['uri'])) {
+        continue;
+      }
+
+      $file['new'] = TRUE;
+    }
+  }
+
+  // Process Node.
+  filefield_paths_node_update($node);
+}
