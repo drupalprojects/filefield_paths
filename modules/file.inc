@@ -63,13 +63,14 @@ function file_filefield_paths_get_fields(&$node, &$ffp) {
       if ($field['type'] == 'file' && isset($node->{$field['field_name']}) && is_array($node->{$field['field_name']})) {
 
         foreach ($node->{$field['field_name']}['zxx'] as $file) {
+          $new = !isset($file['uri']) ? TRUE : FALSE;
           $file = !isset($file['uri']) ? file_load($file['fid']) : (object) $file;
 
           $ffp['#files'][] = array(
             'field' => (array) $file,
             'module' => $field['module'],
             'name' => $field['field_name'],
-            'new' => ($file->status == 0 || isset($file->new)) ? TRUE : FALSE,
+            'new' => ($new || isset($file->new)) ? TRUE : FALSE,
           );
 
           $ffp['#types'][$field['field_name']] = TRUE;
