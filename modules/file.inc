@@ -62,7 +62,7 @@ function file_filefield_paths_get_fields(&$node, &$ffp) {
     foreach ($fields as $name => $field) {
       if ($field['type'] == 'file' && isset($node->{$field['field_name']}) && is_array($node->{$field['field_name']})) {
 
-        foreach ($node->{$field['field_name']}['zxx'] as $file) {
+        foreach ($node->{$field['field_name']}[LANGUAGE_NONE] as $file) {
           $new = !isset($file['uri']) ? TRUE : FALSE;
           $file = !isset($file['uri']) ? file_load($file['fid']) : (object) $file;
 
@@ -86,7 +86,9 @@ function file_filefield_paths_get_fields(&$node, &$ffp) {
  */
 function image_filefield_paths_batch_update($field, $type, &$objects) {
   $instance = field_info_instance('node', $field, $type);
-  $results = field_attach_query($instance['field_id'], array(array('bundle', array($type))));
+
+  // TODO This needs to be replaced with EntityFieldQuery
+  //$results = field_attach_query($instance['field_id'], array(array('bundle', array($type))));
 
   // Build array of Node IDs.
   foreach ($results['node'] as $node) {
@@ -102,7 +104,7 @@ function image_filefield_paths_update($oid, $field) {
 
   // Flag files for update.
   if (isset($node->{$field})) {
-    foreach ($node->{$field}['zxx'] as &$file) {
+    foreach ($node->{$field}[LANGUAGE_NONE] as &$file) {
       if (!is_array($file) || empty($file['uri'])) {
         continue;
       }

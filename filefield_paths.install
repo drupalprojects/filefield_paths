@@ -32,7 +32,7 @@ function filefield_paths_schema() {
  *   The system-wide schema
  */
 function filefield_paths_schema_alter(&$schema) {
-  $schema['file']['fields']['origname'] = array(
+  $schema['file_managed']['fields']['origname'] = array(
     'description' => 'Original name of the file.',
     'type' => 'varchar',
     'length' => 255,
@@ -45,15 +45,10 @@ function filefield_paths_schema_alter(&$schema) {
  * Implements hook_install().
  */
 function filefield_paths_install() {
-  db_add_field('file', 'origname', array('description' => 'Original name of the file.', 'type' => 'varchar', 'length' => 255, 'not null' => TRUE, 'default' => ''));
+  db_add_field('file_managed', 'origname', array('description' => 'Original name of the file.', 'type' => 'varchar', 'length' => 255, 'not null' => TRUE, 'default' => ''));
 
-  $result = db_query("SELECT fid, filename FROM {file}");
-  foreach ($result as $file) {
-    db_update('file')
-      ->fields(array('origname' => $file->filename))
-      ->conditions('fid', $file->fid)
-      ->execute();
-  }
+  $result = db_query("SELECT fid, filename FROM {file_managed}");
+  db_query("UPDATE {file_managed} SET origname=filename");
 
   variable_set('filefield_paths_schema_version', 7103);
 }
@@ -62,7 +57,7 @@ function filefield_paths_install() {
  * Implements hook_uninstall().
  */
 function filefield_paths_uninstall() {
-  db_drop_field('file', 'origname');
+  db_drop_field('file_managed', 'origname');
   variable_del('filefield_paths_schema_version');
 }
 

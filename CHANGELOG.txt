@@ -3,5 +3,5 @@
 FileField Paths 7.x-1.x-dev, xxxx-xx-xx (development release)
 -----------------------------------
 
+- #959988 by aidanlis: Added multiple D7 port fixes.
 - Initial 7.x release.
-

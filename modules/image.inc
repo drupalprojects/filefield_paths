@@ -52,17 +52,11 @@ function image_filefield_paths_form_submit(&$form_state, &$ffp) {
  */
 function image_filefield_paths_get_fields(&$node, &$ffp) {
   if (is_object($node)) {
-    // TODO: Replace with field_info_fields() when http://drupal.org/node/613754 is fixed.
-    $instances = field_info_instances('node', $node->type);
-    $fields = array();
-    foreach ($instances as $field_name => $instance) {
-      $fields[$field_name] = field_info_field($field_name);
-    }
-
+    $fields = field_info_fields();
     foreach ($fields as $name => $field) {
       if ($field['type'] == 'image' && isset($node->{$field['field_name']}) && is_array($node->{$field['field_name']})) {
 
-        foreach ($node->{$field['field_name']}['zxx'] as $file) {
+        foreach ($node->{$field['field_name']}[LANGUAGE_NONE] as $file) {
           $new = !isset($file['uri']) ? TRUE : FALSE;
           $file = !isset($file['uri']) ? file_load($file['fid']) : (object) $file;
 
@@ -102,7 +96,7 @@ function file_filefield_paths_update($oid, $field) {
 
   // Flag files for update.
   if (isset($node->{$field})) {
-    foreach ($node->{$field}['zxx'] as &$file) {
+    foreach ($node->{$field}[LANGUAGE_NONE] as &$file) {
       if (!is_array($file) || empty($file['uri'])) {
         continue;
       }

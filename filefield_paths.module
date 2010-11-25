@@ -476,24 +476,20 @@ function filefield_paths_filefield_paths_process_file($new, &$file, $settings, &
       if (file_prepare_directory(dirname($file['filepath']['new']), FILE_CREATE_DIRECTORY) && file_move((object) $file['field'], $file['filepath']['new'])) {
 
         // Fix reference to old paths.
-        $file_directory_path = file_uri_scheme($file['field']['uri']) !== 'private' ? file_directory_path(file_uri_scheme($file['field']['uri'])) : 'system/files';
+        $file_directory_path = file_uri_scheme($file['field']['uri']) !== 'private'
+          ? 'public:/'
+          : 'private:/';
 
         $pattern = array(
-          'regex' => str_replace('/', '\/', $file_directory_path) . '([^"]*?)' . str_replace('/', '\/', str_replace(file_directory_path(), '', file_uri_target($file['filepath']['old']))),
-          'regex_enc' => str_replace('/', '\/', drupal_encode_path($file_directory_path)) . '([^"]*?)' . str_replace('/', '\/', str_replace(drupal_encode_path(file_directory_path()), '', drupal_encode_path(file_uri_target($file['filepath']['old'])))),
-          'replace' => $file_directory_path . '$1' . str_replace(file_directory_path(), '', file_uri_target($file['filepath']['new'])),
+          'regex'     => str_replace('/', '\/', $file_directory_path) . '([^"]*?)' . str_replace('/', '\/', str_replace('public:/', '', file_uri_target($file['filepath']['old']))),
+          'regex_enc' => str_replace('/', '\/', drupal_encode_path($file_directory_path)) . '([^"]*?)' . str_replace('/', '\/', str_replace(drupal_encode_path('public:/'), '', drupal_encode_path(file_uri_target($file['filepath']['old'])))),
+          'replace'   => $file_directory_path . '$1' . str_replace('public:/', '', file_uri_target($file['filepath']['new'])),
         );
 
-        // TODO: Replace with field_info_fields() when http://drupal.org/node/613754 is fixed.
-        $instances = field_info_instances('node', $node->type);
-        $fields = array();
-        foreach ($instances as $field_name => $instance) {
-          $fields[$field_name] = field_info_field($field_name);
-        }
-
+        $fields = field_info_fields();
         foreach ($fields as $name => $field) {
           if ($field['module'] == 'text' && isset($node->{$field['field_name']}) && is_array($node->{$field['field_name']})) {
-            foreach ($node->{$field['field_name']}['zxx'] as &$item) {
+            foreach ($node->{$field['field_name']}[LANGUAGE_NONE] as &$item) {
               $original = $item['value'];
               $item['value'] = (preg_match('/' . $pattern['regex'] . '/s', $item['value']))
                 ? preg_replace('/' . $pattern['regex'] . '/s', $pattern['replace'], $item['value'])
@@ -629,7 +625,7 @@ function filefield_paths_file_insert(&$file) {
   // Store original filename in the database.
   if (empty($file->origname)) {
     $file->origname = $file->filename;
-    db_update('file')
+    db_update('file_managed')
       ->fields(array('origname' => $file->filename))
       ->condition('fid', $file->fid)
       ->execute();
