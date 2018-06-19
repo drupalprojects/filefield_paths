@@ -5,7 +5,7 @@
  * Contains \Drupal\filefield_paths\Tests\FileFieldPathsRedirectTest.
  */
 
-namespace Drupal\filefield_paths\Tests;
+namespace Drupal\Tests\filefield_paths\Functional;
 
 use Drupal\Component\Utility\Unicode;
 use Drupal\node\Entity\Node;

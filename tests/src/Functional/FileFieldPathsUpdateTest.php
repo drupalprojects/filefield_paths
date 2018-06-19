@@ -5,7 +5,7 @@
  * Contains \Drupal\filefield_paths\Tests\FileFieldPathsUpdateTest.
  */
 
-namespace Drupal\filefield_paths\Tests;
+namespace Drupal\Tests\filefield_paths\Functional;
 
 use Drupal\Component\Utility\Unicode;
 
@@ -63,7 +63,7 @@ class FileFieldPathsUpdateTest extends FileFieldPathsTestBase {
     /** @var \Drupal\file\Entity\File $test_file */
     $test_file = $this->getTestFile('image');
     $nid = $this->uploadNodeFile($test_file, $field_name, $this->contentType);
-    $this->drupalPostForm(NULL, ["{$field_name}[0][alt]" => $this->randomString()], $this->t('Save and keep published'));
+    $this->drupalPostForm(NULL, ["{$field_name}[0][alt]" => $this->randomString()], $this->t('Save'));
 
     // Ensure that the file is in the default path.
     $this->drupalGet("node/{$nid}");

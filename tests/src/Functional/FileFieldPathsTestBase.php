@@ -5,16 +5,21 @@
  * Contains \Drupal\filefield_paths\Tests\FileFieldPathsTestBase.
  */
 
-namespace Drupal\filefield_paths\Tests;
+namespace Drupal\Tests\filefield_paths\Functional;
 
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\file\Tests\FileFieldTestBase;
+use Drupal\Tests\file\Functional\FileFieldTestBase;
+use Drupal\Tests\TestFileCreationTrait;
 
 /**
  * Base class for File (Field) Paths tests.
  */
 abstract class FileFieldPathsTestBase extends FileFieldTestBase {
   use StringTranslationTrait;
+  use TestFileCreationTrait {
+    getTestFiles as drupalGetTestFiles;
+    compareFiles as drupalCompareFiles;
+  }
 
   public $contentType = NULL;
 
@@ -93,10 +98,10 @@ abstract class FileFieldPathsTestBase extends FileFieldTestBase {
       ->save();
 
     $this->drupalPostForm("admin/structure/types/manage/{$this->contentType}/fields/node.{$this->contentType}.{$name}", [], $this->t('Save settings'));
-    $this->assertText($this->t('Saved @name configuration', ['@name' => $name]));
+    $this->assertSession()->pageTextContains($this->t('Saved @name configuration', ['@name' => $name]));
 
     // Clear field cache in order to avoid stale cache values.
-    \Drupal::entityManager()->clearCachedFieldDefinitions();
+    \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
   }
 
   /**

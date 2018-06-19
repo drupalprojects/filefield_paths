@@ -5,8 +5,9 @@ configure: filefield_paths.admin_settings
 core: 8.x
 type: module
 dependencies:
-  - file
+  - drupal:file
 test_dependencies:
-  - ctools
-  - pathauto
-  - token
+  - ctools:ctools
+  - pathauto:pathauto
+  - token:token
+  - redirect:redirect
