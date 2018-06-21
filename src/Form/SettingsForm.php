@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\filefield_paths\Form\SettingsForm.
- */
-
 namespace Drupal\filefield_paths\Form;
 
 use Drupal\Core\Form\ConfigFormBase;

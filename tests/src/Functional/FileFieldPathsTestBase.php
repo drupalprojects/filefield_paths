@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\filefield_paths\Tests\FileFieldPathsTestBase.
- */
-
 namespace Drupal\Tests\filefield_paths\Functional;
 
 use Drupal\Core\StringTranslation\StringTranslationTrait;
